@@ -1,0 +1,38 @@
+# Material file for mariocu.obj
+
+newmtl Mesh_0184_rip
+	Ns 10
+	d 1
+	illum 2
+	Kd 1.0 1.0 1.0
+	Ks 0.0 0.0 0.0
+	Ka 0.0 0.0 0.0
+	map_Kd Tex_0210_0.png
+
+newmtl Mesh_0185_rip
+	Ns 10
+	d 1
+	illum 2
+	Kd 1.0 1.0 1.0
+	Ks 0.0 0.0 0.0
+	Ka 0.0 0.0 0.0
+	map_Kd Tex_0211_0.png
+
+newmtl Mesh_0186_rip
+	Ns 10
+	d 1
+	illum 2
+	Kd 1.0 1.0 1.0
+	Ks 0.0 0.0 0.0
+	Ka 0.0 0.0 0.0
+	map_Kd Tex_0212_0.png
+
+newmtl Mesh_0187_rip
+	Ns 10
+	d 1
+	illum 2
+	Kd 1.0 1.0 1.0
+	Ks 0.0 0.0 0.0
+	Ka 0.0 0.0 0.0
+	map_Kd Tex_0213_0.png
+
