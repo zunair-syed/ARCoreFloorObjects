@@ -27,29 +27,83 @@
         android:layout_height="fill_parent"
         android:layout_gravity="top" />
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/my_toolbar"
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="#03A9F4"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+        android:layout_height="65dp"
+        android:background="#A60277BD">
 
         <TextView
-            android:id="@+id/toolbar_title"
+            android:id="@+id/toolbarTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
-            android:layout_gravity="center" />
+            android:text="AR Objects"
+            android:layout_centerInParent="true"
+            android:textSize="20dp"
+            android:textStyle="bold"/>
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginRight="30dp"
+            android:layout_toLeftOf="@id/resetIcon"
+            android:src="@drawable/ic_info_outline_black_24dp"
+            android:layout_centerVertical="true"/>
 
-    </android.support.v7.widget.Toolbar>
+        <ImageView
+            android:id="@+id/resetIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginRight="30dp"
+            android:layout_toLeftOf="@id/toolbarTitle"
+            android:src="@drawable/ic_settings_backup_restore_black_24dp"
+            android:layout_centerVertical="true"/>
+
+        <ImageView
+            android:id="@+id/undoIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginLeft="30dp"
+            android:layout_toRightOf="@id/toolbarTitle"
+            android:src="@drawable/ic_undo_black_24dp"
+            android:layout_centerVertical="true"/>
+
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginLeft="30dp"
+            android:layout_toRightOf="@id/undoIcon"
+            android:src="@android:drawable/ic_menu_share"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
+
+
+
+
+    <!--<android.support.v7.widget.Toolbar-->
+        <!--android:id="@+id/my_toolbar"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="?attr/actionBarSize"-->
+        <!--android:background="#03A9F4"-->
+        <!--android:elevation="4dp"-->
+        <!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
+        <!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light">-->
+
+        <!--<TextView-->
+            <!--android:id="@+id/toolbar_title"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"-->
+            <!--android:layout_gravity="center" />-->
+
+    <!--</android.support.v7.widget.Toolbar>-->
 
     <TextView
         android:id="@+id/testingTextView"
         android:layout_width="wrap_content"
         android:layout_height="30dp"
         android:layout_marginLeft="20dp"
+        android:visibility="invisible"
         android:layout_marginTop="20dp"
         android:text="not set yet"
         android:textColor="#FFF" />
@@ -72,7 +126,7 @@
                 android:layout_height="30dp"
                 android:layout_margin="5dp"
                 android:layout_marginRight="10dp"
-                android:src="@drawable/cross"
+                android:src="@drawable/ic_cancel_white_24dp"
                 android:layout_alignParentRight="true"
                 android:layout_above="@id/picker"
                 />
