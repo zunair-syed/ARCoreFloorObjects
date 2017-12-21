@@ -16,12 +16,14 @@
 
 package com.google.ar.core.examples.java.helloar;
 
+import com.almeros.android.multitouch.RotateGestureDetector;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Frame.TrackingState;
 import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.PlaneHitResult;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.examples.java.helloar.adapter.ModelSelectorAdapter;
 import com.google.ar.core.examples.java.helloar.model.ObjectsModel;
@@ -35,17 +37,24 @@ import com.mancj.slideup.SlideUp;
 import com.mancj.slideup.SlideUpBuilder;
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -64,8 +73,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,6 +92,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
     private static final String TAG = HelloArActivity.class.getSimpleName();
+    private static final int LIMIT_OF_OBJECTS = 32;
 
     // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private GLSurfaceView mSurfaceView;
@@ -94,6 +106,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
     private PlaneRenderer mPlaneRenderer = new PlaneRenderer();
     private PointCloudRenderer mPointCloud = new PointCloudRenderer();
+    private RotateGestureDetector mRotateDetector;
 
 
     private static final String[][] mModelsInfo = new String[][]{
@@ -108,6 +121,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     private ObjectsModel[] mModels = new ObjectsModel[mModelsInfo.length];
     private ObjectsModel mCurrentSelectedModel;
     private float mCurrentScaleFactor = 1.0F;
+    private float mRotationDegrees = 0.f;
     private static final float mModelScaleFactorChange = 0.03f;
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
@@ -117,24 +131,39 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     private ArrayBlockingQueue<MotionEvent> mQueuedSingleTaps = new ArrayBlockingQueue<>(16);
     private ArrayList<PlaneAttachment> mTouches = new ArrayList<>();
 
+    //Permissions
+    private static boolean hasAllPermissionsBeenGranted = false;
+    private static final int PERMISSION_DENIED = -1;
+    private static final int REQUEST_PERMISSIONS_CODE = 1;
+    private static final String[] PERMISSIONS_REQUIRED = new String[]{
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA
+    };
 
-    private TextView testingTextView;
+    private boolean needSpaceShareImage = false;
+    private Bitmap spaceShareImage;
+
+    //Menu
+    private ImageView infoIcon;
+    private ImageView resetIcon;
+    private ImageView undoIcon;
+    private ImageView shareIcon;
+
+    //Views
     private ImageView slideUpArrow;
     private ImageView cancelCross;
     private RelativeLayout slideView;
     private SlideUp slideUp;
     private DiscreteScrollView scrollView;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//
-//        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
-//        TextView mTitle = (TextView) findViewById(R.id.toolbar_title);
-//        setSupportActionBar(myToolbar);
-//        mTitle.setText(myToolbar.getTitle());
-//        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        ActivityCompat.requestPermissions(this, PERMISSIONS_REQUIRED,
+                REQUEST_PERMISSIONS_CODE);
 
         for (int i = 0; i < mModelsInfo.length; i++) {
             String[] modelInfo = mModelsInfo[i];
@@ -148,6 +177,37 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
             mCurrentSelectedModel = obj;
             mModels[i] = obj;
         }
+
+
+        infoIcon = (ImageView) findViewById(R.id.infoIcon);
+        resetIcon = (ImageView) findViewById(R.id.resetIcon);
+        undoIcon = (ImageView) findViewById(R.id.undoIcon);
+        shareIcon = (ImageView) findViewById(R.id.shareIcon);
+        infoIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInfo();
+            }
+        });
+        resetIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                resetObjects();
+            }
+        });
+        undoIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                undoObject();
+            }
+        });
+        shareIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                needSpaceShareImage = true;
+            }
+        });
+
 
         scrollView = findViewById(R.id.picker);
         cancelCross = (ImageView) findViewById(R.id.cancelModelPicker);
@@ -176,8 +236,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
             }
         });
 
-        testingTextView = (TextView) findViewById(R.id.testingTextView);
-
         mSurfaceView = (GLSurfaceView) findViewById(R.id.surfaceview);
 
         mSession = new Session(/*context=*/this);
@@ -203,11 +261,14 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                 return true;
             }
         });
+        mRotateDetector = new RotateGestureDetector(getApplicationContext(), new RotateListener());
+
 
         mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 mScaleGestureDetector.onTouchEvent(event);
+                mRotateDetector.onTouchEvent(event);
                 return mGestureDetector.onTouchEvent(event);
             }
         });
@@ -220,10 +281,8 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                 float scaleFactor = detector.getScaleFactor();
 
                 if (scaleFactor > 1) {
-                    testingTextView.setText("Zooming Out " + scaleFactor);
                     mCurrentScaleFactor += mCurrentScaleFactor * mModelScaleFactorChange * scaleFactor * scaleFactor;
                 } else {
-                    testingTextView.setText("Zooming In " + scaleFactor);
                     mCurrentScaleFactor -= mCurrentScaleFactor * mModelScaleFactorChange * scaleFactor * scaleFactor;
                 }
                 return true;
@@ -248,45 +307,15 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     }
 
 
-
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main_menu, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-////        if (id == R.id.action_settings) {
-////            return true;
-////        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-
-
     @Override
     protected void onResume() {
         super.onResume();
 
         // ARCore requires camera permissions to operate. If we did not yet obtain runtime
-        // permission on Android M and above, now is a good time to ask the user for it.
-        if (CameraPermissionHelper.hasCameraPermission(this)) {
-            showLoadingMessage();
-            // Note that order matters - see the note in onPause(), the reverse applies here.
+        if(hasAllPermissionsBeenGranted){
             mSession.resume(mDefaultConfig);
             mSurfaceView.onResume();
-        } else {
-            CameraPermissionHelper.requestCameraPermission(this);
+            resetObjects();
         }
     }
 
@@ -302,22 +331,17 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
-            Toast.makeText(this,
-                    "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
-            finish();
+        boolean tempPermissionBeenGranted = true;
+        for(int result : results){
+            if(result == PERMISSION_DENIED) tempPermissionBeenGranted = false;
         }
+        hasAllPermissionsBeenGranted = tempPermissionBeenGranted;
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
-
-//            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-//            getWindow().setStatusBarColor(Color.parseColor("#0277BD"));
-
             //Standard Android full-screen functionality.
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -374,6 +398,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
         // Clear screen to notify driver it should not load any pixels from previous frame.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
+        Log.d("zunair test","rotation: " + mRotationDegrees);
         try {
             // Obtain the current frame from ARSession. When the configuration is set to
             // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
@@ -389,7 +414,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                     if (hit instanceof PlaneHitResult && ((PlaneHitResult) hit).isHitInPolygon()) {
                         // Cap the number of objects created. This avoids overloading both the
                         // rendering system and ARCore.
-                        if (mTouches.size() >= 16) {
+                        if (mTouches.size() >= LIMIT_OF_OBJECTS) {
                             mSession.removeAnchors(Arrays.asList(mTouches.get(0).getAnchor()));
                             mTouches.remove(0);
                         }
@@ -449,21 +474,20 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
             // Visualize anchors created by touch.
             for (int i = 0; i < mTouches.size(); i++) {
-                Log.d("zunair test","11111");
                 PlaneAttachment touchAttachment = mTouches.get(i);
                 if (!touchAttachment.isTracking()) {
-                    Log.d("zunair test","1.5555");
                     continue;
                 }
-
-                Log.d("zunair test","22222");
-
 
                 // Get the current combined pose of an Anchor and Plane in world space. The Anchor
                 // and Plane poses are updated during calls to session.update() as ARCore refines
                 // its estimate of the world.
-                touchAttachment.getPose().toMatrix(mAnchorMatrix, 0);
-                Log.d("zunair test","33333");
+                if(mRotationDegrees < 0) mRotationDegrees *= -1;
+                mRotationDegrees = mRotationDegrees % 360;
+                float [] quaternion = new float[4];
+                touchAttachment.getPose().getRotationQuaternion(quaternion, 0);
+                Pose rotatedPose = touchAttachment.getPose().compose(Pose.makeRotation(0.0f, 100f,0,0));
+                rotatedPose.toMatrix(mAnchorMatrix, 0);
 
                 if(i == mTouches.size() - 1 && touchAttachment.getModel().getName().equals(mCurrentSelectedModel.getName()))
                     touchAttachment.setScaleFactor(mCurrentScaleFactor);
@@ -475,7 +499,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                         break;
                     }
                 }
-                Log.d("zunair test","44444");
 
                 // Update and draw the model and its shadow.
 //                mVirtualObject.updateModelMatrix(mAnchorMatrix, mModelScaleFactor);
@@ -483,6 +506,19 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 //                mVirtualObject.draw(viewmtx, projmtx, lightIntensity);
 //                mVirtualObjectShadow.draw(viewmtx, projmtx, lightIntensity);
             }
+
+
+
+            if(needSpaceShareImage){
+                needSpaceShareImage = false;
+                spaceShareImage = saveTexture(mSurfaceView.getWidth(), mSurfaceView.getHeight());
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.putExtra(Intent.EXTRA_STREAM, getImageUri(this, spaceShareImage));
+                shareIntent.setType("image/jpeg");
+                startActivity(Intent.createChooser(shareIntent, "Share With"));
+            }
+
 
         } catch (Throwable t) {
             // Avoid crashing the application due to unhandled exceptions.
@@ -517,7 +553,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     public void onClickModel(ObjectsModel obj, int position) {
         mCurrentSelectedModel = obj;
         mCurrentScaleFactor = obj.getScaleFactor();
-//        Toast.makeText(this, "chosen obj is " + obj.toString(),Toast.LENGTH_SHORT).show();
     }
 
     public static Bitmap getBitmapFromAsset(Context context, String filePath) {
@@ -533,4 +568,75 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
         return bitmap;
     }
+
+
+
+    private void undoObject(){
+        if(mTouches.size() <= 0) return;
+        mTouches.remove(mTouches.size() - 1);
+    }
+
+    private void resetObjects(){
+        if(mTouches.size() <= 0) return;
+        mTouches.clear();
+    }
+
+    private void showInfo(){
+        new AlertDialog.Builder(this)
+                .setTitle("AR Objects (An ARCore Experiment)")
+                .setMessage("AR Objects is an experiment based on the ARCore features provided in the ARCore Preivew Release. \n" +
+                            "This app allows you to place objects on a surface or in air, delete and undo, and share your space with friends \n" +
+                            "Augument your space with this app. \n\n\n" +
+                            "An App By Zunair Syed")
+                .setPositiveButton("Good Stuff !", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                })
+                .create()
+                .show();
+    }
+
+
+
+    public static Bitmap saveTexture(int width, int height) {
+        ByteBuffer buffer = ByteBuffer.allocate(width * height * 4);
+        GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
+        reverseBuffer(buffer, width, height);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(buffer);
+        return bitmap;
+    }
+
+    private static void reverseBuffer(ByteBuffer buf, int width, int height)
+    {
+        int i = 0;
+        byte[] tmp = new byte[width * 4];
+        while (i++ < height / 2)
+        {
+            buf.get(tmp);
+            System.arraycopy(buf.array(), buf.limit() - buf.position(), buf.array(), buf.position() - width * 4, width * 4);
+            System.arraycopy(tmp, 0, buf.array(), buf.limit() - buf.position(), width * 4);
+        }
+        buf.rewind();
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        //TODO: ADD WRITE PERMISSON
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+
+    private class RotateListener extends RotateGestureDetector.SimpleOnRotateGestureListener {
+        @Override
+        public boolean onRotate(RotateGestureDetector detector) {
+            mRotationDegrees -= detector.getRotationDegreesDelta();
+            return true;
+        }
+    }
+
 }

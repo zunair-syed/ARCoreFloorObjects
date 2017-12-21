@@ -14,11 +14,11 @@
    limitations under the License.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:layout="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.google.ar.core.examples.java.helloar.HelloArActivity">
 
     <android.opengl.GLSurfaceView
@@ -31,70 +31,72 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="65dp"
-        android:background="#A60277BD">
+        android:background="#660277BD">
 
         <TextView
             android:id="@+id/toolbarTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="AR Objects"
             android:layout_centerInParent="true"
-            android:textSize="20dp"
-            android:textStyle="bold"/>
+            android:text="AR Objects"
+            android:textColor="#FFF"
+            android:textSize="25dp"
+            android:textStyle="bold" />
+
         <ImageView
+            android:id="@+id/infoIcon"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginRight="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="25dp"
             android:layout_toLeftOf="@id/resetIcon"
-            android:src="@drawable/ic_info_outline_black_24dp"
-            android:layout_centerVertical="true"/>
+            android:src="@drawable/ic_info_outline_white_24dp" />
 
         <ImageView
             android:id="@+id/resetIcon"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginRight="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="25dp"
             android:layout_toLeftOf="@id/toolbarTitle"
-            android:src="@drawable/ic_settings_backup_restore_black_24dp"
-            android:layout_centerVertical="true"/>
+            android:src="@drawable/ic_settings_backup_restore_white_24dp" />
 
         <ImageView
             android:id="@+id/undoIcon"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginLeft="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="25dp"
             android:layout_toRightOf="@id/toolbarTitle"
-            android:src="@drawable/ic_undo_black_24dp"
-            android:layout_centerVertical="true"/>
+            android:src="@drawable/ic_undo_white_24dp" />
 
 
         <ImageView
+            android:id="@+id/shareIcon"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginLeft="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="25dp"
             android:layout_toRightOf="@id/undoIcon"
-            android:src="@android:drawable/ic_menu_share"
-            android:layout_centerVertical="true"/>
+            android:src="@drawable/ic_share_white_24dp" />
     </RelativeLayout>
 
 
-
-
     <!--<android.support.v7.widget.Toolbar-->
-        <!--android:id="@+id/my_toolbar"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="?attr/actionBarSize"-->
-        <!--android:background="#03A9F4"-->
-        <!--android:elevation="4dp"-->
-        <!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
-        <!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light">-->
+    <!--android:id="@+id/my_toolbar"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="?attr/actionBarSize"-->
+    <!--android:background="#03A9F4"-->
+    <!--android:elevation="4dp"-->
+    <!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
+    <!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light">-->
 
-        <!--<TextView-->
-            <!--android:id="@+id/toolbar_title"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"-->
-            <!--android:layout_gravity="center" />-->
+    <!--<TextView-->
+    <!--android:id="@+id/toolbar_title"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"-->
+    <!--android:layout_gravity="center" />-->
 
     <!--</android.support.v7.widget.Toolbar>-->
 
@@ -103,10 +105,10 @@
         android:layout_width="wrap_content"
         android:layout_height="30dp"
         android:layout_marginLeft="20dp"
-        android:visibility="invisible"
         android:layout_marginTop="20dp"
         android:text="not set yet"
-        android:textColor="#FFF" />
+        android:textColor="#FFF"
+        android:visibility="invisible" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -114,22 +116,20 @@
 
         <RelativeLayout
             android:id="@+id/slideView"
-            android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
             android:layout_height="190dp"
-            android:layout_marginBottom="10dp"
-            >
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="10dp">
 
             <ImageView
                 android:id="@+id/cancelModelPicker"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
+                android:layout_above="@id/picker"
+                android:layout_alignParentRight="true"
                 android:layout_margin="5dp"
                 android:layout_marginRight="10dp"
-                android:src="@drawable/ic_cancel_white_24dp"
-                android:layout_alignParentRight="true"
-                android:layout_above="@id/picker"
-                />
+                android:src="@drawable/ic_cancel_white_24dp" />
 
             <com.yarolegovich.discretescrollview.DiscreteScrollView
                 android:id="@+id/picker"
@@ -144,10 +144,9 @@
             android:id="@+id/slideUpArrow"
             android:layout_width="120dp"
             android:layout_height="50dp"
-            android:src="@drawable/up_arrow"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="30dp"
-            />
+            android:src="@drawable/up_arrow" />
     </RelativeLayout>
 </FrameLayout>
