@@ -7,7 +7,6 @@ Resize them. Choose from a bunch.
 [![Video Demo At https://youtu.be/de42P_37kxU](thumbnail_demo_video.png
 )](https://www.youtube.com/watch?v=n6iV6UAy-dc "Video Demo At https://youtu.be/de42P_37kxU")
 
-
  
 
 #### Set up your development environment
