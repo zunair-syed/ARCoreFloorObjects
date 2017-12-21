@@ -21,7 +21,7 @@ Resize them. Choose from a bunch.
 3) Compile and run this project through Android Studio. 
 
 #### Calibration Required
-If your Androids are moving away as you approach them, or moving in an unexpected direction, you need to calibrate your device. You can do this by rotating your device in an '8' pattern horizontally. 
+If your objects are moving away as you approach them, or moving in an unexpected direction, you need to calibrate your device. You can do this by rotating your device in an '8' pattern horizontally. 
 
 
 
