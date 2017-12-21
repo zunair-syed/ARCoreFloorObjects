@@ -106,7 +106,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
     private PlaneRenderer mPlaneRenderer = new PlaneRenderer();
     private PointCloudRenderer mPointCloud = new PointCloudRenderer();
-    private RotateGestureDetector mRotateDetector;
 
 
     private static final String[][] mModelsInfo = new String[][]{
@@ -121,7 +120,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     private ObjectsModel[] mModels = new ObjectsModel[mModelsInfo.length];
     private ObjectsModel mCurrentSelectedModel;
     private float mCurrentScaleFactor = 1.0F;
-    private float mRotationDegrees = 0.f;
     private static final float mModelScaleFactorChange = 0.03f;
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
@@ -223,7 +221,15 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
         slideUpArrow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //The following lines of code fix an intermittent problem with
+                //slideUp menu where it was not appearing intermittently
                 slideUp.show();
+                slideView.requestLayout();
+                slideView.requestFocus();
+                scrollView.requestLayout();
+                scrollView.requestFocus();
+                slideUp.show();
+
                 scrollView.smoothScrollToPosition(1);
                 slideUpArrow.setVisibility(View.INVISIBLE);
             }
@@ -261,14 +267,14 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                 return true;
             }
         });
-        mRotateDetector = new RotateGestureDetector(getApplicationContext(), new RotateListener());
+
+
 
 
         mSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 mScaleGestureDetector.onTouchEvent(event);
-                mRotateDetector.onTouchEvent(event);
                 return mGestureDetector.onTouchEvent(event);
             }
         });
@@ -398,7 +404,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
         // Clear screen to notify driver it should not load any pixels from previous frame.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        Log.d("zunair test","rotation: " + mRotationDegrees);
         try {
             // Obtain the current frame from ARSession. When the configuration is set to
             // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
@@ -482,12 +487,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                 // Get the current combined pose of an Anchor and Plane in world space. The Anchor
                 // and Plane poses are updated during calls to session.update() as ARCore refines
                 // its estimate of the world.
-                if(mRotationDegrees < 0) mRotationDegrees *= -1;
-                mRotationDegrees = mRotationDegrees % 360;
-                float [] quaternion = new float[4];
-                touchAttachment.getPose().getRotationQuaternion(quaternion, 0);
-                Pose rotatedPose = touchAttachment.getPose().compose(Pose.makeRotation(0.0f, 100f,0,0));
-                rotatedPose.toMatrix(mAnchorMatrix, 0);
+                touchAttachment.getPose().toMatrix(mAnchorMatrix, 0);
 
                 if(i == mTouches.size() - 1 && touchAttachment.getModel().getName().equals(mCurrentSelectedModel.getName()))
                     touchAttachment.setScaleFactor(mCurrentScaleFactor);
@@ -628,15 +628,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
-    }
-
-
-    private class RotateListener extends RotateGestureDetector.SimpleOnRotateGestureListener {
-        @Override
-        public boolean onRotate(RotateGestureDetector detector) {
-            mRotationDegrees -= detector.getRotationDegreesDelta();
-            return true;
-        }
     }
 
 }
