@@ -1,10 +1,11 @@
-## ARCore Floating Objects
-Create Floating Androids (in World-Space) by touching any point in the screen. 
+## ARCore Floor Objects
+Create Floor Objects (in World-Space) by touching any point in the screen. 
+Resize them. Choose from a bunch.  
 
 #### Demo
 
-[![Video Demo At https://www.youtube.com/watch?v=n6iV6UAy-dc](thumbnail_video_demo2.png
-)](https://www.youtube.com/watch?v=n6iV6UAy-dc "Video Demo At https://www.youtube.com/watch?v=n6iV6UAy-dc")
+[![Video Demo At https://www.youtube.com/watch?v=de42P_37kxU](thumbnail_demo_video.png
+)](https://www.youtube.com/watch?v=n6iV6UAy-dc "Video Demo At https://www.youtube.com/watch?v=de42P_37kxU")
 
  
 
