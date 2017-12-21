@@ -19,7 +19,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.google.ar.core.examples.java.helloar.HelloArActivity">
+    tools:context="com.google.ar.core.wtf.floor.objects.com.google.ar.ar.wtf.floor.objects.HelloArActivity">
 
     <android.opengl.GLSurfaceView
         android:id="@+id/surfaceview"
