@@ -72,11 +72,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-/**
- * This is a simple example that shows how to create an augmented reality (AR) application using
- * the ARCore API. The application will display any detected planes and will allow the user to
- * tap on a plane to place a 3d model of the Android robot.
- */
+
 public class MainARActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
     private static final String TAG = MainARActivity.class.getSimpleName();
     private static final int LIMIT_OF_OBJECTS = 32;
